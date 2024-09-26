@@ -12,6 +12,7 @@ class QuoteViewModel: ObservableObject {
     @Published var currentQuote: Quote?
     
     @Published var favoriteQuotes: [Quote] = []
+    @Published var allQuotes: [Quote] = []
     
     private var modelContext: ModelContext
     
@@ -45,7 +46,7 @@ class QuoteViewModel: ObservableObject {
                         let newQuote = Quote(text: quoteData.text, isFavourite: quoteData.isFavourite)
                         modelContext.insert(newQuote)
                     }
-                    
+
                     saveChanges()
                 }
             }catch {
@@ -58,20 +59,18 @@ class QuoteViewModel: ObservableObject {
     }
     
     func fetchRandomQuote() {
-        
+    
         let fetchDescriptor = FetchDescriptor<Quote>()
-
         do {
             
             let fetchedQuotes = try modelContext.fetch(fetchDescriptor)
-
             
             guard !fetchedQuotes.isEmpty else {
                 print("No quotes found.")
                 return
             }
-
             
+            allQuotes = fetchedQuotes.shuffled()
             var randomQuote: Quote
             repeat {
                 randomQuote = fetchedQuotes.randomElement()!
@@ -93,7 +92,7 @@ class QuoteViewModel: ObservableObject {
                 .init(\.updatedDate)
                 ]
         )
-        
+    
         do{
             let fetechedQuotes = try modelContext.fetch(fetchDescriptor)
             self.favoriteQuotes = fetechedQuotes.reversed()
@@ -103,11 +102,6 @@ class QuoteViewModel: ObservableObject {
         }
     }
     
-    
-    
-//    func removeFromFavorite(indexSet : IndexSet){
-//        favoriteQuotes.
-//    }
     
 
     
