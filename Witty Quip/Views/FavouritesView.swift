@@ -8,29 +8,48 @@
 import SwiftUI
 
 struct FavouritesView: View {
-    @StateObject var viewModel: QuoteViewModel
+    @StateObject var quoteViewModel: QuoteViewModel
     var body: some View {
         NavigationStack{
             VStack{
-                List{
-                    ForEach(viewModel.favoriteQuotes){ quote in
+                if quoteViewModel.favoriteQuotes.isEmpty{
+                    Image("nonFavImage")
+                        .resizable()
+                        .scaledToFit()
+                        .padding()
+                        .frame(width: UIScreen.main.bounds.width/1.5)
+                    
+                    Text("You don't have any favourite quotes yet.")
+                        .multilineTextAlignment(.center)
+                        .font(.title3)
+                        .bold()
+                        .frame(width: UIScreen.main.bounds.width/1.5)
+                        .padding()
+                    
+                    
+                }else{
+                    List{
+                        ForEach(quoteViewModel.favoriteQuotes){ quote in
 
-                        NavigationLink {
-                            SingleQuoteView(quoteModel: quote,viewModel: viewModel)
-                        } label: {
-                            HStack{
-                                Text(quote.text)
-                                    .font(.footnote)
-                                    .padding()
+                            NavigationLink {
+                                SingleQuoteView(quoteModel: quote,quoteViewModel: quoteViewModel)
+                            } label: {
+                                HStack{
+                                    Text(quote.text)
+                                        .font(.footnote)
+                                        .padding()
+                                }
                             }
+                            
                         }
-                        
+
                     }
                 }
+                
             }
             .navigationTitle("Favourites").navigationBarTitleDisplayMode(.inline)
         }.onAppear{
-            viewModel.fetchFavoriteQuotes()
+            quoteViewModel.fetchFavoriteQuotes()
         }
     }
 }

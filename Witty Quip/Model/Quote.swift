@@ -22,6 +22,4 @@ class Quote{
         self.isFavourite = isFavourite
         self.updatedDate = Date()
     }
-    
-    
 }

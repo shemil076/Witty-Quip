@@ -10,7 +10,7 @@ import SwiftUI
 struct SingleQuoteView: View {
     
     @Bindable var quoteModel : Quote
-    @StateObject var viewModel: QuoteViewModel
+    @StateObject var quoteViewModel: QuoteViewModel
     
     var body: some View {
         NavigationStack{
@@ -30,8 +30,8 @@ struct SingleQuoteView: View {
         .toolbar{
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: {
-                    viewModel.toggleFavorite(for: quoteModel)
-                    viewModel.fetchFavoriteQuotes()
+                    quoteViewModel.toggleFavorite(for: quoteModel)
+                    quoteViewModel.fetchFavoriteQuotes()
                 }, label: {
                     Label("", systemImage: quoteModel.isFavourite == true ? "heart.fill" : "heart")
                             

@@ -17,11 +17,11 @@ struct ContentView: View {
     
     var body: some View {
         TabView {
-            MainQuoteView(viewModel: viewModel).tabItem {
+            MainQuoteView(quoteViewModel: viewModel).tabItem {
                 Label("Home", systemImage: "quote.bubble")
             }
             
-            FavouritesView(viewModel: viewModel).tabItem {
+            FavouritesView(quoteViewModel: viewModel).tabItem {
                 Label("Favourites", systemImage: "star.fill")
             }
         }

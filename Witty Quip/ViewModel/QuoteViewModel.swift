@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 class QuoteViewModel: ObservableObject {
-    @Published var currentQuote: Quote?
+//    @Published var currentQuote: Quote?
     
     @Published var favoriteQuotes: [Quote] = []
     @Published var allQuotes: [Quote] = []
@@ -63,21 +63,29 @@ class QuoteViewModel: ObservableObject {
         let fetchDescriptor = FetchDescriptor<Quote>()
         do {
             
-            let fetchedQuotes = try modelContext.fetch(fetchDescriptor)
-            
-            guard !fetchedQuotes.isEmpty else {
-                print("No quotes found.")
-                return
+            if self.allQuotes.isEmpty {
+                
+                let fetchedQuotes = try modelContext.fetch(fetchDescriptor)
+                
+                guard !fetchedQuotes.isEmpty else {
+                    print("No quotes found.")
+                    return
+                }
+                
+                self.allQuotes = fetchedQuotes
             }
             
-            allQuotes = fetchedQuotes.shuffled()
-            var randomQuote: Quote
-            repeat {
-                randomQuote = fetchedQuotes.randomElement()!
-            } while randomQuote.id == currentQuote?.id
-
+            self.allQuotes.shuffle()
+        
             
-            self.currentQuote = randomQuote
+//            
+//            var randomQuote: Quote
+//            repeat {
+//                randomQuote = fetchedQuotes.randomElement()!
+//            } while randomQuote.id == currentQuote?.id
+//
+//            
+//            self.currentQuote = randomQuote
 
         } catch {
             print("Failed to fetch quotes: \(error)")
