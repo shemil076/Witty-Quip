@@ -7,43 +7,65 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct MainQuoteView: View {
     @StateObject var quoteViewModel: QuoteViewModel
     @State private var currentIndex = 0
-    @State var showSettingsSheet : Bool = false
+    @State var showSettingsSheet: Bool = false
+    @State private var isCopied: Bool = false
     
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
                 ZStack {
-                        ForEach(0..<quoteViewModel.allQuotes.count, id: \.self) { index in
-                            if index < quoteViewModel.allQuotes.count {
-                                let quote = quoteViewModel.allQuotes[index]
-                                VStack {
-                                    Text(quote.text)
-                                        .multilineTextAlignment(.center)
-                                        .font(.custom("HappyMonkey-Regular", size: 40))
-                                        .offset(y: CGFloat(index - self.currentIndex) * geometry.size.height)
-                                        .animation(.spring(), value: currentIndex)
-
-                                    Circle()
-                                        .fill(Color.gray.opacity(0.2))
-                                        .frame(width: 150, height: 20)
-                                        .scaleEffect(x: 9.0, y: 0.5)
-                                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
-                                        .offset(y: CGFloat(index - self.currentIndex) * geometry.size.height)
-                                        .animation(.spring(), value: currentIndex)
+                    ForEach(0..<quoteViewModel.allQuotes.count, id: \.self) { index in
+                        if index < quoteViewModel.allQuotes.count {
+                            let quote = quoteViewModel.allQuotes[index]
+                            VStack {
+                                Text(quote.text)
+                                    .multilineTextAlignment(.center)
+                                    .font(.custom("HappyMonkey-Regular", size: 40))
+                                    .offset(y: CGFloat(index - self.currentIndex) * geometry.size.height)
+                                
+                                Circle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(width: 150, height: 20)
+                                    .scaleEffect(x: 9.0, y: 0.5)
+                                    .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                                    .offset(y: CGFloat(index - self.currentIndex) * geometry.size.height)
+                                
+                                HStack(spacing: 30) {
+                                    Button {
+                                        Utils.shareQuote(quote: quote.text)
+                                    } label: {
+                                        Image(systemName: "square.and.arrow.up")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(.blue)
+                                            .accessibilityLabel("Share Quote")
+                                            .accessibilityHint("Shares the current quote")
+                                        
+                                    }
+                                    .offset(y: CGFloat(index - self.currentIndex) * geometry.size.height)
                                     
+                                    
+                                    Button {
+                                        Utils.copyQuoteToClipboard(quote: quote, isCopied: $isCopied)
+                                    } label: {
+                                        Image(systemName: isCopied ? "document.on.clipboard.fill" : "doc.on.clipboard")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(.blue)
+                                            .accessibilityLabel("Copy Quote")
+                                            .accessibilityHint("Copies the current quote to clipboard")
+                                    }
+                                    .offset(y: CGFloat(index - self.currentIndex) * geometry.size.height)
                                 }
-                                .padding()
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                                
-                                
-                                
+                                .padding(.top, 20)
                             }
+                            .padding()
+                            .frame(width: geometry.size.width, height: geometry.size.height)
                         }
-                        
+                    }
                     
                     VStack {
                         Spacer()
@@ -51,46 +73,42 @@ struct MainQuoteView: View {
                             Spacer()
                             ZStack {
                                 RoundedRectangle(cornerRadius: 15)
-                                    .fill(Color.gray.opacity(0.2)) // Background for the button
+                                    .fill(Color.gray.opacity(0.2))
                                     .frame(
                                         width: min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) / 8,
                                         height: min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) / 8
-                                    ) // Size is fixed based on the smaller dimension to avoid resizing issues on rotation.
-
+                                    )
+                                
                                 Button {
                                     showSettingsSheet.toggle()
                                 } label: {
                                     Image(systemName: "person")
-                                        .font(.system(size: 30)) // Increase icon size
-                                        .foregroundColor(.blue)  // Color of the icon
+                                        .font(.system(size: 30))
+                                        .foregroundColor(.blue)
+                                        .accessibilityLabel("Settings")
+                                        .accessibilityHint("Opens the settings screen")
                                 }
                             }
                             .padding()
                         }
                         .padding(.bottom, 30)
                     }
-
-
-
-
-                        
-                    
-                    
                 }
                 .contentShape(Rectangle())
                 .gesture(
                     DragGesture()
                         .onEnded { value in
-                            if value.translation.height < -50 && self.currentIndex < quoteViewModel.allQuotes.count - 1 {
-                                self.currentIndex += 1
-                            } else if value.translation.height > 50 && self.currentIndex > 0 {
-                                self.currentIndex -= 1
+                            // Wrap the index change in withAnimation to animate the scroll
+                            withAnimation(.spring()) {
+                                if value.translation.height < -50 && self.currentIndex < quoteViewModel.allQuotes.count - 1 {
+                                    self.currentIndex += 1
+                                } else if value.translation.height > 50 && self.currentIndex > 0 {
+                                    self.currentIndex -= 1
+                                }
                             }
                         }
                 )
-                
             }
-//            .edgesIgnoringSafeArea(.all)
             .sheet(isPresented: $showSettingsSheet, content: {
                 ProfileSettingsView(quoteViewModel: quoteViewModel)
             })
@@ -102,19 +120,21 @@ struct MainQuoteView: View {
                         }, label: {
                             Label("", systemImage: currentQuote.isFavourite ? "heart.fill" : "heart")
                         })
+                        .accessibilityLabel(currentQuote.isFavourite ? "Unfavorite Quote" : "Favorite Quote")
+                        .accessibilityHint("Toggles favorite status of the current quote")
                     }
                 }
             }
         }
         .onAppear {
             if quoteViewModel.allQuotes.isEmpty {
-                quoteViewModel.fetchRandomQuote() // Ensure you have a method to load allQuotes
+                quoteViewModel.fetchRandomQuote()
             }
         }
     }
+    
 }
 
-// Helper extension to safely access array elements
 extension Collection {
     subscript(safe index: Index) -> Element? {
         return indices.contains(index) ? self[index] : nil

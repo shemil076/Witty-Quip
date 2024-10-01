@@ -20,7 +20,6 @@ struct ProfileSettingsView: View {
                         Label("Riminders", systemImage: "bell")
                     }
                     
-                    Label("Mode", systemImage: "moon")
                 }
             }.navigationBarTitle("Profile Settings").navigationBarTitleDisplayMode(.inline)
                 .toolbar {

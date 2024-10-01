@@ -14,10 +14,14 @@ struct RimindersSettings: View {
     
     @State private var startTime: Date = UserDefaults.standard.object(forKey: "startTime") as? Date ?? Date()
     @State private var endTime: Date = UserDefaults.standard.object(forKey: "endTime") as? Date ?? Date().addingTimeInterval(3600)
-    @State private var remindersPerDay: Int = UserDefaults.standard.integer(forKey: "remindersPerDay")
+    @State private var remindersPerDay: Int = UserDefaults.standard.value(forKey: "remindersPerDay") as? Int ?? 1
+
+//    @State private var remindersPerDay: Int = UserDefaults.standard.integer(forKey: "remindersPerDay")
     
     @State var defualtReminder: Bool = UserDefaults.standard.bool(forKey: "defaultReminder")
     @State var customReminder: Bool = UserDefaults.standard.bool(forKey: "customReminder")
+    @State var isInvalidPeriod: Bool = false
+    @State var isInvalidRepeatingCount: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -119,7 +123,7 @@ struct RimindersSettings: View {
                                     .foregroundColor(defualtReminder ? .gray : .primary)
                                 Spacer()
                                 Picker("", selection: $remindersPerDay) {
-                                    ForEach(1..<25) { number in
+                                    ForEach(1..<25, id: \.self) { number in
                                         Text("\(number)")
                                             .foregroundColor(defualtReminder ? .gray : .primary)
                                     }
@@ -128,12 +132,13 @@ struct RimindersSettings: View {
                                 .pickerStyle(.menu)
                                 .disabled(defualtReminder)
                                 .onChange(of: remindersPerDay) {
+                                    customReminder = false
                                     UserDefaults.standard.set(remindersPerDay, forKey: "remindersPerDay")
                                 }
                             }
                             
                             // Validation and Display
-                            if endTime > startTime {
+                            if (endTime > startTime) {
                                 Text("Selected Time Period: \(formattedTime(from: startTime)) - \(formattedTime(from: endTime))")
                                     .font(.subheadline)
                                     .foregroundColor(defualtReminder ? .gray : .primary)
@@ -152,6 +157,15 @@ struct RimindersSettings: View {
             }
             .padding()
             .navigationTitle("Riminders")
+        }.alert("The end time should be at least 10 minutes after the start time.", isPresented: $isInvalidPeriod) {
+            Button("OK") {
+                customReminder = false
+            }
+        }
+        .alert("Reduce the number of notifications respective to the period", isPresented: $isInvalidRepeatingCount) {
+            Button("OK") {
+                customReminder = false
+            }
         }
         .onAppear {
             if !hasRequestedPermission {
@@ -165,8 +179,9 @@ struct RimindersSettings: View {
         if defualtReminder {
             print("Default reminder enabled")
             let startTime = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date())!
-            let endTime = Calendar.current.date(bySettingHour: 10, minute: 0, second: 0, of: Date())!
-            notificationHandler.pushNotification(quoteViewModel: quoteViewModel, startTime: startTime, endTime: endTime, repeatingCount: 60)
+            let endTime = Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date())!
+            let totalMinutes = extractTimeAndValidate(startTime: startTime, endTime: endTime, repeatingCount: 10)
+            notificationHandler.pushNotification(quoteViewModel: quoteViewModel, startTime: startTime, totalMinutes: totalMinutes, repeatingCount: 10)
         } else {
             notificationHandler.cancelNotifications()
             print("Default reminder disabled")
@@ -177,12 +192,47 @@ struct RimindersSettings: View {
     private func handleCustomReminderChange() {
         if customReminder {
             print("Custom reminder enabled")
-            notificationHandler.pushNotification(quoteViewModel: quoteViewModel, startTime: startTime, endTime: endTime, repeatingCount: remindersPerDay)
+            
+            
+            let totalMinutes = extractTimeAndValidate(startTime: startTime, endTime: endTime, repeatingCount: remindersPerDay)
+            if !isInvalidPeriod{
+                notificationHandler.pushNotification(quoteViewModel: quoteViewModel, startTime: startTime, totalMinutes: totalMinutes, repeatingCount: remindersPerDay)
+            }
         } else {
             notificationHandler.cancelNotifications()
             print("Custom reminder disabled")
         }
         UserDefaults.standard.set(customReminder, forKey: "customReminder")
+    }
+    
+    private func extractTimeAndValidate(startTime: Date, endTime: Date,repeatingCount: Int) -> Int{
+        let calendar = Calendar.current
+        let startHour = calendar.component(.hour, from: startTime)
+        let startMinute = calendar.component(.minute, from: startTime)
+        let endHour = calendar.component(.hour, from: endTime)
+        let endMinute = calendar.component(.minute, from: endTime)
+        
+        let totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute)
+        
+        print("total mins",totalMinutes)
+        print("repeatingCount",repeatingCount)
+        
+        
+        guard totalMinutes >= 10, repeatingCount > 0  else {
+            print("Invalid time interval or repeating count.")
+            isInvalidPeriod = true
+            return 0
+        }
+        
+        let interval = totalMinutes / repeatingCount
+        
+        guard interval > 0 else {
+            isInvalidRepeatingCount = true
+            return 0
+        }
+        isInvalidPeriod = false
+        isInvalidRepeatingCount = false
+        return totalMinutes
     }
 
     func formattedTime(from date: Date) -> String {

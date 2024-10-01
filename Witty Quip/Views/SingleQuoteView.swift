@@ -11,6 +11,7 @@ struct SingleQuoteView: View {
     
     @Bindable var quoteModel : Quote
     @StateObject var quoteViewModel: QuoteViewModel
+    @State private var isCopied: Bool = false
     
     var body: some View {
         NavigationStack{
@@ -25,6 +26,29 @@ struct SingleQuoteView: View {
                     .frame(width: 150, height: 20)
                     .scaleEffect(x: 9.0, y: 0.5)
                     .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                
+                HStack(spacing: 30) {
+                    Button {
+                        Utils.shareQuote(quote: quoteModel.text)
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 20))
+                            .foregroundColor(.blue)
+                            .accessibilityLabel("Share Quote")
+                            .accessibilityHint("Shares the current quote")
+                    }
+                    
+                    Button {
+                        Utils.copyQuoteToClipboard(quote: quoteModel, isCopied: $isCopied)
+                    } label: {
+                        Image(systemName: isCopied ? "document.on.clipboard.fill" : "doc.on.clipboard")
+                            .font(.system(size: 20))
+                            .foregroundColor(.blue)
+                            .accessibilityLabel("Copy Quote")
+                            .accessibilityHint("Copies the current quote to clipboard")
+                    }
+                }
+                .padding(.top, 20)
             }.padding()
         }
         .toolbar{
