@@ -36,33 +36,88 @@ class QuoteViewModel: ObservableObject {
         }
     }
     
+    
+//    func populateQuotesFromJSON() {
+//        if let url = Bundle.main.url(forResource: "quotes", withExtension: "json") {
+//            isLoading = true
+//            do {
+//                let data = try Data(contentsOf: url)
+//                let decodedQuotes = try JSONDecoder().decode([QuoteData].self, from: data)
+//                
+//                let fetchDescriptor = FetchDescriptor<Quote>()
+//                let existingQuotes = try modelContext.fetchCount(fetchDescriptor)
+//                
+//                if existingQuotes == 0 {
+//                    for quoteData in decodedQuotes{
+//                        let newQuote = Quote(text: quoteData.text, isFavourite: quoteData.isFavourite)
+//                        modelContext.insert(newQuote)
+//                    }
+//                    
+//                    saveChanges()
+//                }
+//            }catch {
+//                print("Error loading JSON: \(error.localizedDescription)")
+//            }
+//        }
+//        else{
+//            print("quotes.json file not found")
+//        }
+//        isLoading = false
+//    }
+    
     func populateQuotesFromJSON() {
-        if let url = Bundle.main.url(forResource: "quotes", withExtension: "json") {
-            isLoading = true
+        guard let url = Bundle.main.url(forResource: "quotes", withExtension: "json") else {
+            print("quotes.json file not found")
+            return
+        }
+        
+        isLoading = true
+        
+        DispatchQueue.global(qos: .background).async { [weak self] in
             do {
                 let data = try Data(contentsOf: url)
                 let decodedQuotes = try JSONDecoder().decode([QuoteData].self, from: data)
                 
-                let fetchDescriptor = FetchDescriptor<Quote>()
-                let existingQuotes = try modelContext.fetchCount(fetchDescriptor)
-                
-                if existingQuotes == 0 {
-                    for quoteData in decodedQuotes{
+                DispatchQueue.main.async {
+                    self?.insertQuotesInBatches(decodedQuotes)
+                }
+            } catch {
+                print("Error loading JSON: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self?.isLoading = false
+                }
+            }
+        }
+    }
+    
+    func insertQuotesInBatches(_ decodedQuotes: [QuoteData]) {
+        let fetchDescriptor = FetchDescriptor<Quote>()
+        
+        do {
+            let existingQuotesCount = try modelContext.fetchCount(fetchDescriptor)
+            
+            if existingQuotesCount == 0 {
+                let batchSize = 1000
+                for batchStart in stride(from: 0, to: decodedQuotes.count, by: batchSize) {
+                    let batch = decodedQuotes[batchStart..<min(batchStart + batchSize, decodedQuotes.count)]
+                    
+                    for quoteData in batch {
                         let newQuote = Quote(text: quoteData.text, isFavourite: quoteData.isFavourite)
                         modelContext.insert(newQuote)
                     }
                     
                     saveChanges()
                 }
-            }catch {
-                print("Error loading JSON: \(error.localizedDescription)")
+                
+                fetchRandomQuote()
             }
+        } catch {
+            print("Error fetching or inserting quotes: \(error.localizedDescription)")
         }
-        else{
-            print("quotes.json file not found")
-        }
+        
         isLoading = false
     }
+
     
     func fetchRandomQuote() {
         

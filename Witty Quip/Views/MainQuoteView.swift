@@ -15,6 +15,9 @@ struct MainQuoteView: View {
     @State var showSettingsSheet: Bool = false
     @State private var isCopied: Bool = false
     
+    
+
+    
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
