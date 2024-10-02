@@ -24,23 +24,16 @@ class NotificationHandler{
     func pushNotification(quoteViewModel: QuoteViewModel, startTime: Date, totalMinutes: Int, repeatingCount: Int) {
         let notificationCenter = UNUserNotificationCenter.current()
         
-        // Extract the start and end time components from the Date objects
         let calendar = Calendar.current
         let startHour = calendar.component(.hour, from: startTime)
         let startMinute = calendar.component(.minute, from: startTime)
         
         
-//        let endHour = calendar.component(.hour, from: endTime)
-//        let endMinute = calendar.component(.minute, from: endTime)
-        
-        // Calculate the total time interval in minutes between start and end times
-//        let totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute)
-//        
         guard totalMinutes > 0, repeatingCount > 0 else {
             print("Invalid time interval or repeating count.")
             return
         }
-//        
+        
         let interval = totalMinutes / repeatingCount
         
         print("interval: \(interval)")
@@ -48,14 +41,14 @@ class NotificationHandler{
         
         for i in 0..<repeatingCount {
             let notificationContent = UNMutableNotificationContent()
-            notificationContent.title = "Witty Quip"
-            notificationContent.body = quoteViewModel.allQuotes.randomElement()?.text ?? "Here's a witty quote!"
+            notificationContent.title = AppConstants.appName
+            notificationContent.body = quoteViewModel.allQuotes.randomElement()?.text ?? AppConstants.defaultQuote
             notificationContent.badge = .init()
             notificationContent.sound = .default
             
             // Calculate notification time
             let totalNotificationMinutes = startMinute + (i * interval)
-            let notificationHour = (startHour + (totalNotificationMinutes / 60)) % 24 // Wrap around to avoid overflow
+            let notificationHour = (startHour + (totalNotificationMinutes / 60)) % 24 
             let notificationMinute = totalNotificationMinutes % 60
             
             var dateComponents = DateComponents()
@@ -73,7 +66,7 @@ class NotificationHandler{
             }
         }
     }
-
+    
     
     func cancelNotifications() {
         let notificationCenter = UNUserNotificationCenter.current()

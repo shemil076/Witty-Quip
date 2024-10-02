@@ -54,14 +54,16 @@ struct SingleQuoteView: View {
         .toolbar{
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: {
-                    quoteViewModel.toggleFavorite(for: quoteModel)
-                    quoteViewModel.fetchFavoriteQuotes()
+                    withAnimation { 
+                        quoteViewModel.toggleFavorite(for: quoteModel)
+                        quoteViewModel.fetchFavoriteQuotes()
+                    }
                 }, label: {
                     Label("", systemImage: quoteModel.isFavourite == true ? "heart.fill" : "heart")
-                            
                 })
             }
         }
+
     }
 }
 

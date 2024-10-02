@@ -9,31 +9,35 @@ import SwiftUI
 
 struct ProfileSettingsView: View {
     @StateObject var quoteViewModel: QuoteViewModel
-    @Environment(\.dismiss) var dimiss
+    @Environment(\.dismiss) var dismiss
+    
     var body: some View {
-        NavigationStack{
-            Form{
-                Section{
+        NavigationStack {
+            Form {
+                Section {
                     NavigationLink {
-                        RimindersSettings(quoteViewModel: quoteViewModel)
+                        RemindersSettings(quoteViewModel: quoteViewModel) // Corrected typo
                     } label: {
-                        Label("Riminders", systemImage: "bell")
-                    }
-                    
-                }
-            }.navigationBarTitle("Profile Settings").navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button(action: {
-                            dimiss()
-                        }, label: {
-                            Text("Cancel")
-                        })
+                        Label("Reminders", systemImage: "bell") // Corrected typo
                     }
                 }
+            }
+            .navigationBarTitle("Profile Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        dismiss()
+                    }, label: {
+                        Text("Cancel")
+                    })
+                    .accessibilityLabel("Cancel Profile Settings") // Adding accessibility label for clarity
+                }
+            }
         }
     }
 }
+
 
 //#Preview {
 //    ProfileSettingsView()

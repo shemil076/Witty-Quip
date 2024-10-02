@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct RimindersSettings: View {
+struct RemindersSettings: View {
     @State var notificationHandler = NotificationHandler()
     @StateObject var quoteViewModel: QuoteViewModel
     @State private var hasRequestedPermission: Bool = false
@@ -15,8 +15,6 @@ struct RimindersSettings: View {
     @State private var startTime: Date = UserDefaults.standard.object(forKey: "startTime") as? Date ?? Date()
     @State private var endTime: Date = UserDefaults.standard.object(forKey: "endTime") as? Date ?? Date().addingTimeInterval(3600)
     @State private var remindersPerDay: Int = UserDefaults.standard.value(forKey: "remindersPerDay") as? Int ?? 1
-
-//    @State private var remindersPerDay: Int = UserDefaults.standard.integer(forKey: "remindersPerDay")
     
     @State var defualtReminder: Bool = UserDefaults.standard.bool(forKey: "defaultReminder")
     @State var customReminder: Bool = UserDefaults.standard.bool(forKey: "customReminder")
@@ -58,7 +56,7 @@ struct RimindersSettings: View {
                     }
                     .opacity(customReminder ? 0.5 : 1.0)
                     .animation(.easeInOut, value: customReminder)
-
+                    
                     GroupBox {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
@@ -156,7 +154,7 @@ struct RimindersSettings: View {
                 }
             }
             .padding()
-            .navigationTitle("Riminders")
+            .navigationTitle("Reminders")
         }.alert("The end time should be at least 10 minutes after the start time.", isPresented: $isInvalidPeriod) {
             Button("OK") {
                 customReminder = false
@@ -188,7 +186,7 @@ struct RimindersSettings: View {
         }
         UserDefaults.standard.set(defualtReminder, forKey: "defaultReminder")
     }
-
+    
     private func handleCustomReminderChange() {
         if customReminder {
             print("Custom reminder enabled")
@@ -234,7 +232,7 @@ struct RimindersSettings: View {
         isInvalidRepeatingCount = false
         return totalMinutes
     }
-
+    
     func formattedTime(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -244,5 +242,5 @@ struct RimindersSettings: View {
 
 
 //#Preview {
-//    RimindersSettings()
+//    RemindersSettings()
 //}

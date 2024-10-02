@@ -9,10 +9,10 @@ import SwiftUI
 import SwiftData
 
 class QuoteViewModel: ObservableObject {
-//    @Published var currentQuote: Quote?
     
     @Published var favoriteQuotes: [Quote] = []
     @Published var allQuotes: [Quote] = []
+    @Published var isLoading: Bool = false
     
     private var modelContext: ModelContext
     
@@ -29,37 +29,43 @@ class QuoteViewModel: ObservableObject {
     }
     
     private func saveChanges(){
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("Error saving changes: \(error.localizedDescription)")
+        }
     }
     
     func populateQuotesFromJSON() {
         if let url = Bundle.main.url(forResource: "quotes", withExtension: "json") {
+            isLoading = true
             do {
                 let data = try Data(contentsOf: url)
                 let decodedQuotes = try JSONDecoder().decode([QuoteData].self, from: data)
                 
                 let fetchDescriptor = FetchDescriptor<Quote>()
                 let existingQuotes = try modelContext.fetchCount(fetchDescriptor)
-               
+                
                 if existingQuotes == 0 {
                     for quoteData in decodedQuotes{
                         let newQuote = Quote(text: quoteData.text, isFavourite: quoteData.isFavourite)
                         modelContext.insert(newQuote)
                     }
-
+                    
                     saveChanges()
                 }
             }catch {
-                print("Error loading JSON: \(error)")
+                print("Error loading JSON: \(error.localizedDescription)")
             }
         }
         else{
             print("quotes.json file not found")
         }
+        isLoading = false
     }
     
     func fetchRandomQuote() {
-    
+        
         let fetchDescriptor = FetchDescriptor<Quote>()
         do {
             
@@ -76,17 +82,8 @@ class QuoteViewModel: ObservableObject {
             }
             
             self.allQuotes.shuffle()
-        
             
-//            
-//            var randomQuote: Quote
-//            repeat {
-//                randomQuote = fetchedQuotes.randomElement()!
-//            } while randomQuote.id == currentQuote?.id
-//
-//            
-//            self.currentQuote = randomQuote
-
+            
         } catch {
             print("Failed to fetch quotes: \(error)")
         }
@@ -98,9 +95,9 @@ class QuoteViewModel: ObservableObject {
             predicate: #Predicate { $0.isFavourite == true },
             sortBy: [
                 .init(\.updatedDate)
-                ]
+            ]
         )
-    
+        
         do{
             let fetechedQuotes = try modelContext.fetch(fetchDescriptor)
             self.favoriteQuotes = fetechedQuotes.reversed()
@@ -111,7 +108,7 @@ class QuoteViewModel: ObservableObject {
     }
     
     
-
+    
     
 }
 
