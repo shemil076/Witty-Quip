@@ -18,17 +18,13 @@ struct Utils{
             isCopied.wrappedValue = false
         }
     }
-    
-    static func shareQuote(quote: String) {
-        let fullQuote = quote + AppConstants.signature
-        let activityVC = UIActivityViewController(activityItems: [fullQuote], applicationActivities: nil)
-        
-        DispatchQueue.main.async {
-            if let currentWindow = UIApplication.shared.connectedScenes
-                .compactMap({ ($0 as? UIWindowScene)?.keyWindow })
-                .first {
-                currentWindow.rootViewController?.present(activityVC, animated: true, completion: nil)
-            }
+}
+
+extension ContentSizeCategory{
+    var customMinScaleFactor: CGFloat{
+        switch self {
+        case .extraSmall, .small, .medium: return 1
+        default : return 0.1
         }
     }
 }

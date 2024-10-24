@@ -62,6 +62,10 @@ class NotificationHandler{
             notificationCenter.add(notificationRequest) { error in
                 if let error = error {
                     print("Error scheduling notification: \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        quoteViewModel.error = error
+                        quoteViewModel.showingErrorAlert = true
+                    }
                 }
             }
         }

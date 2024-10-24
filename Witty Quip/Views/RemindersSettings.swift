@@ -28,6 +28,7 @@ struct RemindersSettings: View {
                 .font(.custom("inter", size: 20))
                 .padding(.top, 20)
                 .padding(.leading, 0)
+                .accessibilityLabel("Set up your daily dose of sarcasm reminders.")
             ScrollView {
                 VStack {
                     GroupBox {
@@ -37,25 +38,34 @@ struct RemindersSettings: View {
                                     .font(.title3).bold()
                                     .foregroundColor(customReminder ? .gray : .primary)
                                     .padding(0)
+                                    .accessibilityLabel("General Reminder")
+                                    .accessibilityHint("9 AM to 10 PM, 10 times per day.")
                                 
                                 Spacer()
                                 Toggle("", isOn: $defualtReminder)
                                     .disabled(customReminder)
                                     .foregroundColor(customReminder ? .gray : .primary)
+                                    .accessibilityLabel("General Reminder Toggle")
+                                    .accessibilityHint(defualtReminder ? "Turn off the general reminder." : "Turn on the general reminder.")
+                                    .accessibilityValue(defualtReminder ? "On" : "Off")
                                     .onChange(of: defualtReminder) {
                                         handleDefaultReminderChange()
                                     }
+                                    
                             }
                             Text("9.00am - 10.00pm")
                                 .font(.headline)
                                 .foregroundColor(customReminder ? .gray : .primary)
+                                .accessibilityLabel("Reminder time period is from 9:00 AM to 10:00 PM")
                             
                             Text("10x per day")
                                 .foregroundColor(customReminder ? .gray : .primary)
+                                .accessibilityLabel("Reminders will be sent 10 times per day")
                         }
                     }
                     .opacity(customReminder ? 0.5 : 1.0)
                     .animation(.easeInOut, value: customReminder)
+                    .accessibilityElement(children: .combine)
                     
                     GroupBox {
                         VStack(alignment: .leading, spacing: 10) {
@@ -63,11 +73,16 @@ struct RemindersSettings: View {
                                 Text("Custom Reminder")
                                     .font(.title3).bold()
                                     .padding(0)
+                                    .accessibilityLabel("Custom Reminder")
+                                    .accessibilityHint("Set a custom time period and reminders.")
                                 
                                 Spacer()
                                 Toggle("", isOn: $customReminder)
                                     .disabled(defualtReminder)
                                     .foregroundColor(defualtReminder ? .gray : .primary)
+                                    .accessibilityLabel("Custom Reminder Toggle")
+                                    .accessibilityHint(customReminder ? "Turn off custom reminder." : "Turn on custom reminder.")
+                                    .accessibilityValue(customReminder ? "On" : "Off")
                                     .onChange(of: customReminder) {
                                         handleCustomReminderChange()
                                     }
@@ -78,6 +93,7 @@ struct RemindersSettings: View {
                                 Text("Start Time")
                                     .font(.headline)
                                     .foregroundColor(defualtReminder ? .gray : .primary)
+                                    .accessibilityLabel("Start time picker")
                                 Spacer()
                                 DatePicker(
                                     "",
@@ -91,6 +107,7 @@ struct RemindersSettings: View {
                                     customReminder = false
                                     UserDefaults.standard.set(startTime, forKey: "startTime")
                                 }
+                                .accessibilityLabel("Select start time for reminders.")
                             }
                             
                             // End Time Picker
@@ -98,6 +115,7 @@ struct RemindersSettings: View {
                                 Text("End Time")
                                     .font(.headline)
                                     .foregroundColor(defualtReminder ? .gray : .primary)
+                                    .accessibilityLabel("End time picker")
                                 Spacer()
                                 DatePicker(
                                     "",
@@ -112,6 +130,7 @@ struct RemindersSettings: View {
                                     customReminder = false
                                     UserDefaults.standard.set(endTime, forKey: "endTime")
                                 }
+                                .accessibilityLabel("Select end time for reminders.")
                             }
                             
                             // Reminders per Day Picker
@@ -119,11 +138,13 @@ struct RemindersSettings: View {
                                 Text("Reminders per Day")
                                     .font(.headline)
                                     .foregroundColor(defualtReminder ? .gray : .primary)
+                                    .accessibilityLabel("Reminders per day picker")
                                 Spacer()
                                 Picker("", selection: $remindersPerDay) {
                                     ForEach(1..<25, id: \.self) { number in
                                         Text("\(number)")
                                             .foregroundColor(defualtReminder ? .gray : .primary)
+                                            .accessibilityLabel("Reminders \(number) times per day")
                                     }
                                 }
                                 .labelsHidden()
@@ -140,15 +161,18 @@ struct RemindersSettings: View {
                                 Text("Selected Time Period: \(formattedTime(from: startTime)) - \(formattedTime(from: endTime))")
                                     .font(.subheadline)
                                     .foregroundColor(defualtReminder ? .gray : .primary)
+                                    .accessibilityLabel("Selected time period is from \(formattedTime(from: startTime)) to \(formattedTime(from: endTime)).")
                             } else {
                                 Text("End time should be after start time")
                                     .foregroundColor(defualtReminder ? .gray : .red)
                                     .font(.subheadline)
+                                    .accessibilityLabel("Error: End time should be after start time.")
                             }
                         }
                     }
                     .opacity(defualtReminder ? 0.5 : 1.0)
                     .animation(.easeInOut, value: defualtReminder)
+                    .accessibilityElement(children: .combine)
                     
                     Spacer()
                 }
@@ -165,6 +189,16 @@ struct RemindersSettings: View {
                 customReminder = false
             }
         }
+        .alert(isPresented: $quoteViewModel.showingErrorAlert) {
+            Alert(
+                title: Text("Notification Error"),
+                message: Text(quoteViewModel.error?.localizedDescription ?? "Unknown error occurred while scheduling notifications."),
+                dismissButton: .default(Text("OK"), action: {
+                    quoteViewModel.showingErrorAlert = false
+                    quoteViewModel.error = nil
+                })
+            )
+        }
         .onAppear {
             if !hasRequestedPermission {
                 notificationHandler.requestAuthorization()
@@ -175,21 +209,18 @@ struct RemindersSettings: View {
     
     private func handleDefaultReminderChange() {
         if defualtReminder {
-            print("Default reminder enabled")
             let startTime = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date())!
             let endTime = Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date())!
             let totalMinutes = extractTimeAndValidate(startTime: startTime, endTime: endTime, repeatingCount: 10)
             notificationHandler.pushNotification(quoteViewModel: quoteViewModel, startTime: startTime, totalMinutes: totalMinutes, repeatingCount: 10)
         } else {
             notificationHandler.cancelNotifications()
-            print("Default reminder disabled")
         }
         UserDefaults.standard.set(defualtReminder, forKey: "defaultReminder")
     }
     
     private func handleCustomReminderChange() {
         if customReminder {
-            print("Custom reminder enabled")
             
             
             let totalMinutes = extractTimeAndValidate(startTime: startTime, endTime: endTime, repeatingCount: remindersPerDay)
@@ -198,7 +229,6 @@ struct RemindersSettings: View {
             }
         } else {
             notificationHandler.cancelNotifications()
-            print("Custom reminder disabled")
         }
         UserDefaults.standard.set(customReminder, forKey: "customReminder")
     }
@@ -212,12 +242,8 @@ struct RemindersSettings: View {
         
         let totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute)
         
-        print("total mins",totalMinutes)
-        print("repeatingCount",repeatingCount)
-        
         
         guard totalMinutes >= 10, repeatingCount > 0  else {
-            print("Invalid time interval or repeating count.")
             isInvalidPeriod = true
             return 0
         }

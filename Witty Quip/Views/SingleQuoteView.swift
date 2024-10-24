@@ -9,6 +9,8 @@ import SwiftUI
 
 struct SingleQuoteView: View {
     
+    @Environment(\.sizeCategory) var sizeCategory
+    
     @Bindable var quoteModel : Quote
     @StateObject var quoteViewModel: QuoteViewModel
     @State private var isCopied: Bool = false
@@ -18,7 +20,9 @@ struct SingleQuoteView: View {
             VStack {
                 Text(quoteModel.text)
                     .multilineTextAlignment(.center)
-                    .font(.custom("HappyMonkey-Regular", size: 40))
+                    .minimumScaleFactor(sizeCategory.customMinScaleFactor)
+                    .font(.custom("HappyMonkey-Regular", size: UIFont.preferredFont(forTextStyle: .largeTitle).pointSize))
+                    .accessibilityValue(quoteModel.text)
                 
                 
                 Circle()
@@ -28,12 +32,11 @@ struct SingleQuoteView: View {
                     .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
                 
                 HStack(spacing: 30) {
-                    Button {
-                        Utils.shareQuote(quote: quoteModel.text)
-                    } label: {
+                    ShareLink(item: quoteModel.text + AppConstants.signature){
                         Image(systemName: "square.and.arrow.up")
                             .font(.system(size: 20))
                             .foregroundColor(.blue)
+                            .frame(width: 44, height: 44)
                             .accessibilityLabel("Share Quote")
                             .accessibilityHint("Shares the current quote")
                     }
@@ -44,6 +47,7 @@ struct SingleQuoteView: View {
                         Image(systemName: isCopied ? "document.on.clipboard.fill" : "doc.on.clipboard")
                             .font(.system(size: 20))
                             .foregroundColor(.blue)
+                            .frame(width: 44, height: 44)
                             .accessibilityLabel("Copy Quote")
                             .accessibilityHint("Copies the current quote to clipboard")
                     }
@@ -66,6 +70,7 @@ struct SingleQuoteView: View {
 
     }
 }
+
 
 //#Preview {
 //    SingleQuoteView()

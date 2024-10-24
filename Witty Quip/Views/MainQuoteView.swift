@@ -15,7 +15,7 @@ struct MainQuoteView: View {
     @State var showSettingsSheet: Bool = false
     @State private var isCopied: Bool = false
     
-    
+    @Environment(\.sizeCategory) var sizeCategory
 
     
     var body: some View {
@@ -35,8 +35,11 @@ struct MainQuoteView: View {
                                 VStack {
                                     Text(quote.text)
                                         .multilineTextAlignment(.center)
-                                        .font(.custom("HappyMonkey-Regular", size: 40))
+                                        .font(.custom("HappyMonkey-Regular", size: UIFont.preferredFont(forTextStyle: .largeTitle).pointSize))
+                                        .minimumScaleFactor(sizeCategory.customMinScaleFactor)
                                         .offset(y: CGFloat(index - self.currentIndex) * geometry.size.height)
+                                        .padding(.top, 10)
+                                        .accessibilityValue(quote.text)
                                     
                                     Circle()
                                         .fill(Color.gray.opacity(0.2))
@@ -46,13 +49,13 @@ struct MainQuoteView: View {
                                         .offset(y: CGFloat(index - self.currentIndex) * geometry.size.height)
                                     
                                     HStack(spacing: 30) {
-                                        Button {
-                                            Utils.shareQuote(quote: quote.text)
-                                        } label: {
+
+                                        ShareLink(item: quote.text + AppConstants.signature){
                                             Image(systemName: "square.and.arrow.up")
                                                 .font(.system(size: 20))
                                                 .foregroundColor(.blue)
                                                 .accessibilityLabel("Share Quote")
+                                                .frame(width: 44, height: 44)
                                                 .accessibilityHint("Shares the current quote")
                                         }
                                         .offset(y: CGFloat(index - self.currentIndex) * geometry.size.height)
@@ -66,6 +69,7 @@ struct MainQuoteView: View {
                                             Image(systemName: isCopied ? "document.on.clipboard.fill" : "doc.on.clipboard")
                                                 .font(.system(size: 20))
                                                 .foregroundColor(.blue)
+                                                .frame(width: 44, height: 44)
                                                 .accessibilityLabel("Copy Quote")
                                                 .accessibilityHint("Copies the current quote to clipboard")
                                         }
@@ -74,7 +78,7 @@ struct MainQuoteView: View {
                                     .padding(.top, 5)
                                     .padding(.bottom, 5)
                                 }
-                                .padding()
+                                .padding(20)
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                             }
                         }
@@ -87,8 +91,8 @@ struct MainQuoteView: View {
                                     RoundedRectangle(cornerRadius: 15)
                                         .fill(Color.gray.opacity(0.2))
                                         .frame(
-                                            width: min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) / 8,
-                                            height: min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) / 8
+                                            width: max(44, min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) / 8),
+                                                   height: max(44, min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) / 8)
                                         )
                                     
                                     Button {
@@ -103,7 +107,7 @@ struct MainQuoteView: View {
                                 }
                                 .padding()
                             }
-                            .padding(.bottom, 30)
+                            .padding(.bottom, UIScreen.main.bounds.height/8)
                         }
                     }
                 }
@@ -120,10 +124,20 @@ struct MainQuoteView: View {
                             }
                         }
                 )
+            }.alert(isPresented: $quoteViewModel.showingErrorAlert) {
+                Alert(
+                    title: Text("Error"),
+                    message: Text(quoteViewModel.error?.localizedDescription ?? "Unknown Error"),
+                    dismissButton: .default(Text("OK"), action: {
+                                quoteViewModel.showingErrorAlert = false
+                                quoteViewModel.error = nil
+                            })
+                )
             }
             .sheet(isPresented: $showSettingsSheet, content: {
                 ProfileSettingsView(quoteViewModel: quoteViewModel)
             })
+            .ignoresSafeArea()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if let currentQuote = quoteViewModel.allQuotes[safe: currentIndex] {
@@ -140,6 +154,7 @@ struct MainQuoteView: View {
                 }
             }
         }
+        
         .onAppear {
             if quoteViewModel.allQuotes.isEmpty {
                 quoteViewModel.fetchRandomQuote()
@@ -153,6 +168,7 @@ extension Collection {
         return indices.contains(index) ? self[index] : nil
     }
 }
+
 
 
 //

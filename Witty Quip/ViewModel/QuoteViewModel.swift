@@ -13,13 +13,18 @@ class QuoteViewModel: ObservableObject {
     @Published var favoriteQuotes: [Quote] = []
     @Published var allQuotes: [Quote] = []
     @Published var isLoading: Bool = false
+    @Published var error: Error?
+    @Published var showingErrorAlert: Bool = false
+    
     
     private var modelContext: ModelContext
     
+    var isErrorPresent: Bool {
+           return error != nil
+       }
+    
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
-        populateQuotesFromJSON()
-        fetchRandomQuote()
     }
     
     func toggleFavorite(for quote: Quote) {
@@ -33,40 +38,17 @@ class QuoteViewModel: ObservableObject {
             try modelContext.save()
         } catch {
             print("Error saving changes: \(error.localizedDescription)")
+            self.error = error
+            self.showingErrorAlert = true
         }
     }
     
     
-//    func populateQuotesFromJSON() {
-//        if let url = Bundle.main.url(forResource: "quotes", withExtension: "json") {
-//            isLoading = true
-//            do {
-//                let data = try Data(contentsOf: url)
-//                let decodedQuotes = try JSONDecoder().decode([QuoteData].self, from: data)
-//                
-//                let fetchDescriptor = FetchDescriptor<Quote>()
-//                let existingQuotes = try modelContext.fetchCount(fetchDescriptor)
-//                
-//                if existingQuotes == 0 {
-//                    for quoteData in decodedQuotes{
-//                        let newQuote = Quote(text: quoteData.text, isFavourite: quoteData.isFavourite)
-//                        modelContext.insert(newQuote)
-//                    }
-//                    
-//                    saveChanges()
-//                }
-//            }catch {
-//                print("Error loading JSON: \(error.localizedDescription)")
-//            }
-//        }
-//        else{
-//            print("quotes.json file not found")
-//        }
-//        isLoading = false
-//    }
     
     func populateQuotesFromJSON() {
         guard let url = Bundle.main.url(forResource: "quotes", withExtension: "json") else {
+            self.error = error
+            self.showingErrorAlert = true
             print("quotes.json file not found")
             return
         }
@@ -86,6 +68,8 @@ class QuoteViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self?.isLoading = false
                 }
+                self?.error = error
+                self?.showingErrorAlert = true
             }
         }
     }
@@ -113,6 +97,8 @@ class QuoteViewModel: ObservableObject {
             }
         } catch {
             print("Error fetching or inserting quotes: \(error.localizedDescription)")
+            self.error = error
+            self.showingErrorAlert = true
         }
         
         isLoading = false
@@ -122,6 +108,7 @@ class QuoteViewModel: ObservableObject {
     func fetchRandomQuote() {
         
         let fetchDescriptor = FetchDescriptor<Quote>()
+        isLoading = true
         do {
             
             if self.allQuotes.isEmpty {
@@ -141,7 +128,10 @@ class QuoteViewModel: ObservableObject {
             
         } catch {
             print("Failed to fetch quotes: \(error)")
+            self.error = error
+            self.showingErrorAlert = true
         }
+        isLoading = false
     }
     
     func fetchFavoriteQuotes(){
@@ -158,6 +148,8 @@ class QuoteViewModel: ObservableObject {
             self.favoriteQuotes = fetechedQuotes.reversed()
             
         }catch {
+            self.error = error
+            self.showingErrorAlert = true
             print("Failed to fetch quotes: \(error)")
         }
     }
