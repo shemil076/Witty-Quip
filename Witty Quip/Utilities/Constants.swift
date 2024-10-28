@@ -13,6 +13,11 @@ struct AppConstants {
     static let signature = "\n\n— Shared via Witty Quip"
     static let termsOfUse = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
     
-//    TODO: Change the placeholder email before publishing
+//    TODO: Update the placeholders
+    static let website = "https://pramudithakarunarathna.me/"
     static let contactEmail = "shemil076@gmail.com"
+    
+    
+//    TODO: Update this once the privacy policy is updated
+    static let lastPrivacyPolicyUpdate = "October 28, 2024"
 }

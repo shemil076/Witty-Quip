@@ -16,7 +16,7 @@ struct PrivacyPolicyView: View {
                     .bold()
                     .padding(.top)
                 
-                Text("Last Updated: October 28, 2024")
+                Text("Last Updated: \(AppConstants.lastPrivacyPolicyUpdate)")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                 

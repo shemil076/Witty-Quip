@@ -32,24 +32,17 @@ struct ProfileSettingsView: View {
                     }
                     
                     Button(action: {
-                        if let url = URL(string: AppConstants.termsOfUse) {
-                                    UIApplication.shared.open(url)
-                                }
+                        Utils.openWebsites(url: AppConstants.termsOfUse)
                     }) {
                         Label("Terms of Use", systemImage: "lock.document")
                     }
                     
                     Button(action: {
-                        sendEmail()
+                        Utils.openWebsites(url: AppConstants.website)
                     }) {
                         Label("WebSite", systemImage: "globe")
                     }
 
-//                    Button(action: {
-//                        
-//                    }) {
-//                        Label("Privacy Policy", systemImage: "lock.fill")
-//                    }
                     
                     Button(action: {
                         sendEmail()

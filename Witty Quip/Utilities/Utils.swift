@@ -18,6 +18,12 @@ struct Utils{
             isCopied.wrappedValue = false
         }
     }
+    
+    static func openWebsites(url: String) {
+        if let url = URL(string: url) {
+                    UIApplication.shared.open(url)
+                }
+    }
 }
 
 extension ContentSizeCategory{
