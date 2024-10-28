@@ -17,23 +17,20 @@ struct ProfileSettingsView: View {
             Form {
                 Section (header: Text("Notifications")) {
                     NavigationLink {
-                        RemindersSettings(quoteViewModel: quoteViewModel) // Corrected typo
+                        RemindersSettings(quoteViewModel: quoteViewModel)
                     } label: {
-                        Label("Reminders", systemImage: "bell") // Corrected typo
+                        Label("Reminders", systemImage: "bell")
                     }
                 }
                 
                 Section (header: Text("General")) {
-                    Button(action: {
-                        sendEmail()
-                    }) {
-                        Label("WebSite", systemImage: "globe")
-                    }
-                    Button(action: {
-                        sendEmail()
-                    }) {
+                    NavigationLink {
+                        PrivacyPolicyView()
+                    } label: {
                         Label("Privacy Policy", systemImage: "lock.fill")
+                            .foregroundColor(.blue)
                     }
+                    
                     Button(action: {
                         if let url = URL(string: AppConstants.termsOfUse) {
                                     UIApplication.shared.open(url)
@@ -41,6 +38,19 @@ struct ProfileSettingsView: View {
                     }) {
                         Label("Terms of Use", systemImage: "lock.document")
                     }
+                    
+                    Button(action: {
+                        sendEmail()
+                    }) {
+                        Label("WebSite", systemImage: "globe")
+                    }
+
+//                    Button(action: {
+//                        
+//                    }) {
+//                        Label("Privacy Policy", systemImage: "lock.fill")
+//                    }
+                    
                     Button(action: {
                         sendEmail()
                     }) {
@@ -65,7 +75,7 @@ struct ProfileSettingsView: View {
     }
     
     func sendEmail() {
-        let email = "mailto:\(AppConstants.contantEmail)"
+        let email = "mailto:\(AppConstants.contactEmail)"
         if let emailURL = URL(string: email) {
             if UIApplication.shared.canOpenURL(emailURL) {
                 UIApplication.shared.open(emailURL, options: [:], completionHandler: nil)

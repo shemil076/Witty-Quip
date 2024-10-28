@@ -14,5 +14,5 @@ struct AppConstants {
     static let termsOfUse = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
     
 //    TODO: Change the placeholder email before publishing
-    static let contantEmail = "shemil076@gmail.com"
+    static let contactEmail = "shemil076@gmail.com"
 }
