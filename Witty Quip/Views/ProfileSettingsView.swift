@@ -35,7 +35,9 @@ struct ProfileSettingsView: View {
                         Label("Privacy Policy", systemImage: "lock.fill")
                     }
                     Button(action: {
-                        sendEmail()
+                        if let url = URL(string: AppConstants.termsOfUse) {
+                                    UIApplication.shared.open(url)
+                                }
                     }) {
                         Label("Terms of Use", systemImage: "lock.document")
                     }
