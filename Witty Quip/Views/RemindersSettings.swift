@@ -242,6 +242,8 @@ struct RemindersSettings: View {
         
         let totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute)
         
+        print("total minutes \(totalMinutes)")
+        
         
         guard totalMinutes >= 10, repeatingCount > 0  else {
             isInvalidPeriod = true

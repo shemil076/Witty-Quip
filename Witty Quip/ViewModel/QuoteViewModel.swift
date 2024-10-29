@@ -19,6 +19,13 @@ class QuoteViewModel: ObservableObject {
     
     private var modelContext: ModelContext
     
+//    Lazy Loading implementation
+    private var fetchedQuoteIDs: Set<UUID> = []
+    private var totalNumberOfQuotes: Int = 0
+    
+    private let userDefaultsKey = "DisplayedQuoteIDs"
+    
+    
     var isErrorPresent: Bool {
            return error != nil
        }
@@ -93,7 +100,8 @@ class QuoteViewModel: ObservableObject {
                     saveChanges()
                 }
                 
-                fetchRandomQuote()
+//                fetchRandomQuote()
+                fetchRandomUniqueQuotes(limit: AppConstants.fetchLimit)
             }
         } catch {
             print("Error fetching or inserting quotes: \(error.localizedDescription)")
@@ -105,34 +113,34 @@ class QuoteViewModel: ObservableObject {
     }
 
     
-    func fetchRandomQuote() {
-        
-        let fetchDescriptor = FetchDescriptor<Quote>()
-        isLoading = true
-        do {
-            
-            if self.allQuotes.isEmpty {
-                
-                let fetchedQuotes = try modelContext.fetch(fetchDescriptor)
-                
-                guard !fetchedQuotes.isEmpty else {
-                    print("No quotes found.")
-                    return
-                }
-                
-                self.allQuotes = fetchedQuotes
-            }
-            
-            self.allQuotes.shuffle()
-            
-            
-        } catch {
-            print("Failed to fetch quotes: \(error)")
-            self.error = error
-            self.showingErrorAlert = true
-        }
-        isLoading = false
-    }
+//    func fetchRandomQuote() {
+//        
+//        let fetchDescriptor = FetchDescriptor<Quote>()
+//        isLoading = true
+//        do {
+//            
+//            if self.allQuotes.isEmpty {
+//                
+//                let fetchedQuotes = try modelContext.fetch(fetchDescriptor)
+//                
+//                guard !fetchedQuotes.isEmpty else {
+//                    print("No quotes found.")
+//                    return
+//                }
+//                
+//                self.allQuotes = fetchedQuotes
+//            }
+//            
+//            self.allQuotes.shuffle()
+//            
+//            
+//        } catch {
+//            print("Failed to fetch quotes: \(error)")
+//            self.error = error
+//            self.showingErrorAlert = true
+//        }
+//        isLoading = false
+//    }
     
     func fetchFavoriteQuotes(){
         
@@ -155,8 +163,67 @@ class QuoteViewModel: ObservableObject {
     }
     
     
+//    Lazy loading implementation
+    
+    private func loadDisplayedQuoteIDs(){
+        let uuidStrings = fetchedQuoteIDs.map{$0.uuidString}
+        UserDefaults.standard.set(uuidStrings, forKey: userDefaultsKey)
+    }
     
     
+    private func saveDisplayedQuoteIDs(){
+        if let uuidStrings = UserDefaults.standard.array(forKey: "DisplayedQuoteIDs") as? [String]{
+            fetchedQuoteIDs = Set(uuidStrings.compactMap{UUID(uuidString: $0)})
+        }
+    }
+    
+    func fetchRandomUniqueQuotes(limit: Int = 100){
+        isLoading = true
+        
+        let fetchDescriptor = FetchDescriptor<Quote>()
+        
+        do {
+            totalNumberOfQuotes = try modelContext.fetchCount(fetchDescriptor)
+            let availableQuotesCount = totalNumberOfQuotes - fetchedQuoteIDs.count
+            let fetchLimit = min(limit, availableQuotesCount)
+            
+            if fetchedQuoteIDs.count >= totalNumberOfQuotes{
+                fetchedQuoteIDs.removeAll()
+                print("All the quotes have been fetched... RESETTING...")
+            }
+            
+            
+            var randomOffsets : Set<Int> = []
+            
+            while randomOffsets.count < fetchLimit{
+                randomOffsets.insert(Int.random(in: 0..<totalNumberOfQuotes))
+            }
+            
+            for offset in randomOffsets {
+                var fetchDescriptor = FetchDescriptor<Quote>()
+                fetchDescriptor.fetchLimit = 1
+                fetchDescriptor.fetchOffset = offset
+                
+                let fetchedQuotes = try modelContext.fetch(fetchDescriptor)
+                
+                guard let quote = fetchedQuotes.first else {
+                    continue
+                }
+                
+                if !fetchedQuoteIDs.contains(quote.id){
+                    fetchedQuoteIDs.insert(quote.id)
+                    allQuotes.append(quote)
+                }
+            }
+            
+            saveDisplayedQuoteIDs()
+        }catch{
+            print("Failed to fetch quotes: \(error.localizedDescription)")
+            self.error = error
+            self.showingErrorAlert = true
+        }
+        isLoading = false
+    }
 }
 
 

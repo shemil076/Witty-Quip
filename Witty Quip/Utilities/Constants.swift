@@ -16,6 +16,7 @@ struct AppConstants {
 //    TODO: Update the placeholders
     static let website = "https://pramudithakarunarathna.me/"
     static let contactEmail = "shemil076@gmail.com"
+    static let fetchLimit = 10
     
     
 //    TODO: Update this once the privacy policy is updated

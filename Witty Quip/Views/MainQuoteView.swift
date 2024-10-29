@@ -78,6 +78,11 @@ struct MainQuoteView: View {
                                     .padding(.top, 5)
                                     .padding(.bottom, 5)
                                 }
+                                .onChange(of : currentIndex){
+                                    if currentIndex == quoteViewModel.allQuotes.count - 1 {
+                                        fetchQuotesIfNeeded()
+                                    }
+                                }
                                 .padding(20)
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                             }
@@ -157,8 +162,16 @@ struct MainQuoteView: View {
         
         .onAppear {
             if quoteViewModel.allQuotes.isEmpty {
-                quoteViewModel.fetchRandomQuote()
+//                quoteViewModel.fetchRandomQuote()
+                
+                quoteViewModel.fetchRandomUniqueQuotes(limit: AppConstants.fetchLimit)
             }
+        }
+    }
+    
+    private func fetchQuotesIfNeeded(){
+        if !quoteViewModel.isLoading{
+            quoteViewModel.fetchRandomUniqueQuotes(limit: AppConstants.fetchLimit)
         }
     }
 }
